@@ -14,7 +14,7 @@ const seedAdmin = async () => {
 
     // Check if admin already exists
     const existingAdmin = await Admin.findOne({
-      email: "vikasjanju7@gmail.com"
+      email: process.env.ADMIN_EMAIL
     });
 
     if (existingAdmin) {
@@ -22,11 +22,11 @@ const seedAdmin = async () => {
       process.exit();
     }
 
-    // Create admin
+    // Create admin using ENV variables
     await Admin.create({
-      name: "vikas",
-      email: "vikasjanju7@gmail.com",
-      password: "vikas2004"
+      name: process.env.ADMIN_NAME,
+      email: process.env.ADMIN_EMAIL,
+      password: process.env.ADMIN_PASSWORD
     });
 
     console.log("✅ Admin created successfully");
@@ -36,7 +36,6 @@ const seedAdmin = async () => {
   } catch (error) {
 
     console.error("❌ Seeder error:", error.message);
-
     process.exit(1);
   }
 };

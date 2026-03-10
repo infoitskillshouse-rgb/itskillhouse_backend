@@ -33,12 +33,12 @@ app.use(cors({
   origin:  process.env.CLIENT_URL,
   credentials: true,
 }))
-// const loginLimiter = rateLimit({
-//   windowMs: 15 * 60 * 1000,
-//   max: 10,
-//   message: "Too many login attempts. Try later.",
-// });
-// app.use("/api/admin/login", loginLimiter);
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: "Too many login attempts. Try later.",
+});
+app.use("/api/admin/login", loginLimiter);
 
 app.use("/api/admin", adminRoutes);
 app.use("/api/inquiries", inquiryRoutes);  
