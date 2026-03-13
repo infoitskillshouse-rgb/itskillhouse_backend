@@ -14,6 +14,9 @@ import blogRoutes from "./routes/blogRoutes.js";
 import testimonialRoutes from './routes/testimonialRoutes.js';
 import studentRotes from './routes/studentRoutes.js';
 import portfolioRoutes from './routes/portfolioRoutes.js'
+import batchRoutes from "./routes/batchRoutes.js";
+
+
 import path from "path";
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
@@ -47,6 +50,7 @@ app.use("/api/blogs", blogRoutes);
 app.use('/api/testimonials', testimonialRoutes);
 app.use('/api/students',studentRotes );
 app.use('/api/portfolios',portfolioRoutes );
+app.use("/api/batches", batchRoutes);
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
