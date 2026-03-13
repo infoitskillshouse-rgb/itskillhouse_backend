@@ -7,6 +7,7 @@ export const addTestimonial = async (req, res, next) => {
   try {
     const { name, message, rating } = req.body;
 
+    // Required fields check
     if (!name || !message || rating === undefined) {
       return res.status(400).json({
         success: false,
@@ -22,16 +23,20 @@ export const addTestimonial = async (req, res, next) => {
       });
     }
 
-    if (!req.file?.path) {
+    // Cloudinary image URL handling
+    let imageUrl = "";
+    if (req.file?.path) {
+      imageUrl = req.file.path;  // uploaded via Cloudinary
+    } else if (req.body.image) {
+      imageUrl = req.body.image; // sent as JSON URL
+    } else {
       return res.status(400).json({
         success: false,
         message: "Image is required",
       });
     }
 
-    // Cloudinary image URL
-    const imageUrl = req.file.path;
-
+    // Create testimonial
     const testimonial = await Testimonial.create({
       name: name.trim(),
       message: message.trim(),

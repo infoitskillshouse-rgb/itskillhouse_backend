@@ -17,7 +17,7 @@ export const createStorage = (folderName) => {
     cloudinary,
     params: {
       folder: folderName,  // dynamic folder name
-      allowed_formats: ["jpg", "png", "jpeg"],
+      allowed_formats: ["jpg", "png", "jpeg","avif","svg"],
     },
   });
 };
