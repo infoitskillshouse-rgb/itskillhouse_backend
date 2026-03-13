@@ -6,9 +6,12 @@ import {
   deleteTestimonial,
 } from "../controllers/testimonialController.js";
 import { isAdminAuthenticated } from "../middleware/authMiddleware.js";
-import { testimonialUpload } from "../middleware/testimonialUpload.js";
+import { createUpload } from "../config/cloudinary.js"; 
 
 const router = express.Router();
+
+// ----------------- Cloudinary Upload -----------------
+const testimonialUpload = createUpload("testimonials"); // Cloudinary folder: 'testimonials'
 
 // Public
 router.get("/", getTestimonials);
@@ -17,7 +20,7 @@ router.get("/", getTestimonials);
 router.post(
   "/create",
   isAdminAuthenticated,
-  testimonialUpload.single("image"),
+  testimonialUpload.single("image"), // single image upload
   addTestimonial
 );
 

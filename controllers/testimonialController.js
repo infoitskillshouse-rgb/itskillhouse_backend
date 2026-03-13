@@ -1,7 +1,4 @@
 import Testimonial from "../models/Testimonial.js";
-import fs from "fs";
-import path from "path";
-import mongoose from "mongoose";
 
 /* ======================
    ADD TESTIMONIAL
@@ -25,20 +22,21 @@ export const addTestimonial = async (req, res, next) => {
       });
     }
 
-    if (!req.file) {
+    if (!req.file?.path) {
       return res.status(400).json({
         success: false,
         message: "Image is required",
       });
     }
 
-    const imageUrl = `${req.protocol}://${req.get("host")}/uploads/testimonials/${req.file.filename}`;
+    // Cloudinary image URL
+    const imageUrl = req.file.path;
 
     const testimonial = await Testimonial.create({
       name: name.trim(),
       message: message.trim(),
       rating: numericRating,
-      image: imageUrl
+      image: imageUrl,
     });
 
     res.status(201).json({
@@ -46,9 +44,6 @@ export const addTestimonial = async (req, res, next) => {
       data: testimonial,
     });
   } catch (err) {
-    if (req.file) {
-      fs.unlinkSync(path.join("uploads/testimonials", req.file.filename));
-    }
     next(err);
   }
 };
@@ -75,10 +70,6 @@ export const updateTestimonial = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid ID" });
-    }
-
     const testimonial = await Testimonial.findById(id);
     if (!testimonial) {
       return res.status(404).json({
@@ -103,14 +94,9 @@ export const updateTestimonial = async (req, res, next) => {
     if (name) testimonial.name = name.trim();
     if (message) testimonial.message = message.trim();
 
-    if (req.file) {
-      const oldImg = path.join(
-        "uploads/testimonials",
-        path.basename(testimonial.image)
-      );
-      if (fs.existsSync(oldImg)) fs.unlinkSync(oldImg);
-
-      testimonial.image = `/uploads/testimonials/${req.file.filename}`;
+    // Cloudinary image update
+    if (req.file?.path) {
+      testimonial.image = req.file.path;
     }
 
     await testimonial.save();
@@ -131,10 +117,6 @@ export const deleteTestimonial = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ success: false, message: "Invalid ID" });
-    }
-
     const testimonial = await Testimonial.findById(id);
     if (!testimonial) {
       return res.status(404).json({
@@ -142,12 +124,6 @@ export const deleteTestimonial = async (req, res, next) => {
         message: "Testimonial not found",
       });
     }
-
-    const imgPath = path.join(
-      "uploads/testimonials",
-      path.basename(testimonial.image)
-    );
-    if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
 
     await testimonial.deleteOne();
 

@@ -1,7 +1,7 @@
+// controllers/blogController.js
 import { Blog } from "../models/Blog.js";
-import fs from "fs";
 
-// CREATE
+// ----------------- CREATE BLOG -----------------
 export const createBlog = async (req, res) => {
   try {
     const {
@@ -19,7 +19,8 @@ export const createBlog = async (req, res) => {
       ogImage,
     } = req.body;
 
-    const image = req.file?.filename;
+    // Cloudinary image URL
+    const image = req.file?.path || "";
 
     const blog = new Blog({
       title,
@@ -34,7 +35,7 @@ export const createBlog = async (req, res) => {
       metaKeywords,
       canonicalUrl,
       ogImage,
-      image,
+      image, // Save Cloudinary URL
     });
 
     await blog.save();
@@ -44,7 +45,7 @@ export const createBlog = async (req, res) => {
   }
 };
 
-// GET ALL with pagination
+// ----------------- GET ALL BLOGS (with pagination) -----------------
 export const getAllBlogs = async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -67,7 +68,7 @@ export const getAllBlogs = async (req, res) => {
   }
 };
 
-// GET BY SLUG
+// ----------------- GET BLOG BY SLUG -----------------
 export const getBlogBySlug = async (req, res) => {
   try {
     const blog = await Blog.findOne({ slug: req.params.slug });
@@ -78,7 +79,7 @@ export const getBlogBySlug = async (req, res) => {
   }
 };
 
-// GET BY ID
+// ----------------- GET BLOG BY ID -----------------
 export const getBlogById = async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
@@ -89,7 +90,7 @@ export const getBlogById = async (req, res) => {
   }
 };
 
-// UPDATE
+// ----------------- UPDATE BLOG -----------------
 export const updateBlog = async (req, res) => {
   try {
     const {
@@ -108,7 +109,7 @@ export const updateBlog = async (req, res) => {
     } = req.body;
 
     const blog = await Blog.findById(req.params.id);
-    if (!blog) return res.status(404).json({ message: "Not found" });
+    if (!blog) return res.status(404).json({ message: "Blog not found" });
 
     blog.title = title || blog.title;
     blog.content = content || blog.content;
@@ -123,11 +124,9 @@ export const updateBlog = async (req, res) => {
     blog.ogImage = ogImage || blog.ogImage;
     blog.category = category || blog.category;
 
-    if (req.file) {
-      if (blog.image && fs.existsSync(`uploads/blogs/${blog.image}`)) {
-        fs.unlinkSync(`uploads/blogs/${blog.image}`);
-      }
-      blog.image = req.file.filename;
+    // Update Cloudinary image if uploaded
+    if (req.file?.path) {
+      blog.image = req.file.path; // Cloudinary URL
     }
 
     await blog.save();
@@ -137,18 +136,13 @@ export const updateBlog = async (req, res) => {
   }
 };
 
-// DELETE
+// ----------------- DELETE BLOG -----------------
 export const deleteBlog = async (req, res) => {
   try {
     const blog = await Blog.findById(req.params.id);
-    if (!blog) return res.status(404).json({ message: "Not found" });
-
-    if (blog.image && fs.existsSync(`uploads/blogs/${blog.image}`)) {
-      fs.unlinkSync(`uploads/blogs/${blog.image}`);
-    }
+    if (!blog) return res.status(404).json({ message: "Blog not found" });
 
     await blog.deleteOne();
-
     res.json({ message: "Blog deleted successfully" });
   } catch (err) {
     res.status(500).json({ message: err.message });

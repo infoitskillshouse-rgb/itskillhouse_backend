@@ -1,5 +1,6 @@
-  import express from "express";
- import {
+// routes/blogRoutes.js
+import express from "express";
+import {
   createBlog,
   getAllBlogs,
   getBlogBySlug,
@@ -7,38 +8,22 @@
   deleteBlog,
   getBlogById,
 } from "../controllers/blogController.js";
+import { isAdminAuthenticated } from "../middleware/authMiddleware.js";
+import { createUpload } from "../config/cloudinary.js";  // Cloudinary setup
 
-  import { isAdminAuthenticated } from "../middleware/authMiddleware.js";
-  import multer from "multer";
-  import path from "path";
-  import fs from "fs";
+const router = express.Router();
 
-  // Multer config
-  const uploadPath = "uploads/blogs/";
-  if (!fs.existsSync(uploadPath)) fs.mkdirSync(uploadPath, { recursive: true });
+// Cloudinary upload for blogs
+const uploadBlog = createUpload("blogs"); // Cloudinary folder: "blogs"
 
-  const storage = multer.diskStorage({
-    destination: (req, file, cb) => cb(null, uploadPath),
-    filename: (req, file, cb) =>
-      cb(null, `${Date.now()}-${file.originalname}`),
-  });
-  const fileFilter = (req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) cb(null, true);
-    else cb(new Error("Invalid image format"));
-  };
+// ----------------- Public Routes -----------------
+router.get("/", getAllBlogs);           // Get all blogs with pagination
+router.get("/id/:id", getBlogById);     // Get blog by MongoDB ID
+router.get("/:slug", getBlogBySlug);    // Get blog by slug
 
-  const upload = multer({ storage, fileFilter });
+// ----------------- Protected Routes (Admin) -----------------
+router.post("/", isAdminAuthenticated, uploadBlog.single("image"), createBlog);
+router.put("/:id", isAdminAuthenticated, uploadBlog.single("image"), updateBlog);
+router.delete("/:id", isAdminAuthenticated, deleteBlog);
 
-  const router = express.Router();
-
-  router.get("/", getAllBlogs);
-  router.get("/id/:id", getBlogById);
-  router.get("/:slug", getBlogBySlug);
-
-  // Protected Routes
-  router.post("/", isAdminAuthenticated, upload.single("image"), createBlog);
-  router.put("/:id", isAdminAuthenticated, upload.single("image"), updateBlog);
-  router.delete("/:id", isAdminAuthenticated, deleteBlog);
-
-  export default router;
+export default router;

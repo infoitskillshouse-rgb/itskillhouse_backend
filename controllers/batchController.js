@@ -1,4 +1,4 @@
-import UpcomingBatch from "../models/upcomingBatchModel.js";
+import UpcomingBatch from "../models/upcomingBatchSchema.js";
 
 export const createBatch = async (req, res) => {
   try {

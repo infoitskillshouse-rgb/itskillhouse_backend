@@ -1,6 +1,4 @@
 import Student from "../models/studentModel.js";
-import fs from "fs";
-import path from "path";
 
 /* =========================
    Course Codes Mapping
@@ -22,7 +20,7 @@ const courseCodes = {
   "Punjabi Typing": "PT",
   "Hindi Typing": "HT",
 };
-   
+
 /* =========================
    Generate Student ID (SAFE)
 ========================= */
@@ -111,7 +109,8 @@ export const createStudent = async (req, res, next) => {
 
     const studentId = await generateStudentId(courseName);
 
-    const imageUrl = `${req.protocol}://${req.get("host")}/uploads/students/${req.file.filename}`;
+    // Cloudinary image URL
+    const imageUrl = req.file.path;
 
     const student = await Student.create({
       studentId,
@@ -134,10 +133,6 @@ export const createStudent = async (req, res, next) => {
       student,
     });
   } catch (err) {
-    if (req.file) {
-      const imgPath = path.join("uploads/students", req.file.filename);
-      if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
-    }
     next(err);
   }
 };
@@ -177,13 +172,7 @@ export const updateStudent = async (req, res, next) => {
     }
 
     if (req.file) {
-      const oldPath = path.join(
-        "uploads/students",
-        path.basename(student.image)
-      );
-      if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-
-      student.image = `${req.protocol}://${req.get("host")}/uploads/students/${req.file.filename}`;
+      student.image = req.file.path;
     }
 
     const allowedFields = [
@@ -227,12 +216,6 @@ export const deleteStudent = async (req, res, next) => {
     if (!student) {
       return res.status(404).json({ message: "Student not found" });
     }
-
-    const imgPath = path.join(
-      "uploads/students",
-      path.basename(student.image)
-    );
-    if (fs.existsSync(imgPath)) fs.unlinkSync(imgPath);
 
     student.isDeleted = true;
     await student.save();

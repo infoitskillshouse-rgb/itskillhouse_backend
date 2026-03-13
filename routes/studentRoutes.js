@@ -1,42 +1,5 @@
 import express from "express";
-import multer from "multer";
-import path from "path";
-import fs from "fs";
-
-const router = express.Router();
-
-/* =========================
-   MULTER SETUP (INSIDE FILE)
-========================= */
-
-const uploadPath = "uploads/students/";
-
-// auto create folder
-if (!fs.existsSync(uploadPath)) {
-  fs.mkdirSync(uploadPath, { recursive: true });
-}
-
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, uploadPath),
-  filename: (req, file, cb) =>
-    cb(null, Date.now() + "-" + file.originalname),
-});
-
-const fileFilter = (req, file, cb) => {
-  const ext = path.extname(file.originalname).toLowerCase();
-  if ([".jpg", ".jpeg", ".png", ".webp"].includes(ext)) {
-    cb(null, true);
-  } else {
-    cb(new Error("Only image files allowed"), false);
-  }
-};
-
-const upload = multer({ storage, fileFilter });
-
-/* =========================
-   CONTROLLERS IMPORT
-========================= */
-
+import { createUpload } from "../config/cloudinary.js";  // Cloudinary
 import {
   createStudent,
   getStudentByStudentId,
@@ -44,38 +7,38 @@ import {
   deleteStudent,
   getAllStudents
 } from "../controllers/studentController.js";
-
 import { isAdminAuthenticated } from "../middleware/authMiddleware.js";
 
-/* =========================
-   ADMIN ROUTES
-========================= */
+const router = express.Router();
+
+// Cloudinary upload for students
+const uploadStudent = createUpload("students");
+
+// ----------------- ADMIN ROUTES -----------------
 
 // Create student (image required)
 router.post(
   "/create",
   isAdminAuthenticated,
-  upload.single("image"),
+  uploadStudent.single("image"),
   createStudent
 );
 
-// Get all
+// Get all students
 router.get("/", isAdminAuthenticated, getAllStudents);
 
-// Update (image optional)
+// Update student (image optional)
 router.put(
   "/:studentId",
   isAdminAuthenticated,
-  upload.single("image"),
+  uploadStudent.single("image"),
   updateStudent
 );
 
-// Delete
+// Delete student
 router.delete("/:studentId", isAdminAuthenticated, deleteStudent);
 
-/* =========================
-   PUBLIC ROUTE
-========================= */
+// ----------------- PUBLIC ROUTE -----------------
 
 // Get single student
 router.get("/:studentId", getStudentByStudentId);

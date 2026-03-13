@@ -55,6 +55,6 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 
 app.get("/", (req, res) => res.send("API running"));
-console.log("ENV FILE TEST");
+
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+app.listen(PORT);
