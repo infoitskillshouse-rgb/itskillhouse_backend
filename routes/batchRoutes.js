@@ -18,7 +18,7 @@ router.get("/:id", getBatchById);
 
 
 // ADMIN ROUTES
-router.post("/", isAdminAuthenticated, createBatch);
+router.post("/create", isAdminAuthenticated, createBatch);
 router.put("/:id", isAdminAuthenticated, updateBatch);
 router.delete("/:id", isAdminAuthenticated, deleteBatch);
 

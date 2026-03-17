@@ -5,6 +5,11 @@ import Testimonial from "../models/Testimonial.js";
 ====================== */
 export const addTestimonial = async (req, res, next) => {
   try {
+    console.log("🔥 API HIT");
+
+    console.log("👉 BODY:", req.body);
+    console.log("👉 FILE:", req.file);
+
     const { name, message, rating } = req.body;
 
     // Required fields check
@@ -25,18 +30,34 @@ export const addTestimonial = async (req, res, next) => {
 
     // Cloudinary image URL handling
     let imageUrl = "";
-    if (req.file?.path) {
-      imageUrl = req.file.path;  // uploaded via Cloudinary
-    } else if (req.body.image) {
-      imageUrl = req.body.image; // sent as JSON URL
-    } else {
+
+    // ✅ Case 1: File upload (Cloudinary)
+    if (req.file) {
+      console.log("✅ File received from Cloudinary");
+
+      imageUrl = req.file.path || req.file.secure_url;
+
+      console.log("👉 Image URL:", imageUrl);
+    }
+
+    // ✅ Case 2: Direct URL (JSON)
+    else if (req.body.image) {
+      console.log("⚠️ Using direct image URL");
+
+      imageUrl = req.body.image;
+    }
+
+    // ❌ Case 3: No image
+    else {
+      console.log("❌ No image found");
+
       return res.status(400).json({
         success: false,
         message: "Image is required",
       });
     }
 
-    // Create testimonial
+    // Save to DB
     const testimonial = await Testimonial.create({
       name: name.trim(),
       message: message.trim(),
@@ -44,11 +65,15 @@ export const addTestimonial = async (req, res, next) => {
       image: imageUrl,
     });
 
+    console.log("✅ Saved in DB:", testimonial);
+
     res.status(201).json({
       success: true,
       data: testimonial,
     });
+
   } catch (err) {
+    console.error("❌ ERROR:", err);
     next(err);
   }
 };

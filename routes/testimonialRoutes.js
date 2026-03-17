@@ -6,12 +6,35 @@ import {
   deleteTestimonial,
 } from "../controllers/testimonialController.js";
 import { isAdminAuthenticated } from "../middleware/authMiddleware.js";
-import { createUpload } from "../config/cloudinary.js"; 
+import { createUpload } from "../config/cloudinary.js";
 
 const router = express.Router();
 
 // ----------------- Cloudinary Upload -----------------
-const testimonialUpload = createUpload("testimonials"); // Cloudinary folder: 'testimonials'
+const testimonialUpload = createUpload("testimonials");
+
+// 🔥 Multer + Cloudinary error handler wrapper
+const uploadMiddleware = (req, res, next) => {
+  const upload = testimonialUpload.single("image");
+
+  upload(req, res, function (err) {
+    if (err) {
+      console.error("❌ Upload Error:", err);
+
+      return res.status(500).json({
+        success: false,
+        message: "Image upload failed",
+        error: err.message,
+      });
+    }
+
+    console.log("✅ File received:", req.file); // debug
+
+    next();
+  });
+};
+
+// ----------------- ROUTES -----------------
 
 // Public
 router.get("/", getTestimonials);
@@ -20,14 +43,14 @@ router.get("/", getTestimonials);
 router.post(
   "/create",
   isAdminAuthenticated,
-  testimonialUpload.single("image"), // single image upload
+  uploadMiddleware, // ✅ wrapped middleware
   addTestimonial
 );
 
 router.put(
   "/:id",
   isAdminAuthenticated,
-  testimonialUpload.single("image"),
+  uploadMiddleware,
   updateTestimonial
 );
 
