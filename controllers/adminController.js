@@ -395,7 +395,7 @@ export const forgotPassword = async (req, res) => {
           <p>If you did not request this, ignore this email.</p>
         `,
       });
-      console.log("Reset email sent manually to:", admin.email);
+   
     } catch (emailError) {
       console.error("Manual Email Sending Error:", emailError);
       return res.status(500).json({

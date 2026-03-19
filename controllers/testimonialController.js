@@ -5,10 +5,6 @@ import Testimonial from "../models/Testimonial.js";
 ====================== */
 export const addTestimonial = async (req, res, next) => {
   try {
-    console.log("🔥 API HIT");
-
-    console.log("👉 BODY:", req.body);
-    console.log("👉 FILE:", req.file);
 
     const { name, message, rating } = req.body;
 
@@ -33,16 +29,14 @@ export const addTestimonial = async (req, res, next) => {
 
     // ✅ Case 1: File upload (Cloudinary)
     if (req.file) {
-      console.log("✅ File received from Cloudinary");
+
 
       imageUrl = req.file.path || req.file.secure_url;
 
-      console.log("👉 Image URL:", imageUrl);
     }
 
     // ✅ Case 2: Direct URL (JSON)
     else if (req.body.image) {
-      console.log("⚠️ Using direct image URL");
 
       imageUrl = req.body.image;
     }
@@ -65,7 +59,7 @@ export const addTestimonial = async (req, res, next) => {
       image: imageUrl,
     });
 
-    console.log("✅ Saved in DB:", testimonial);
+
 
     res.status(201).json({
       success: true,

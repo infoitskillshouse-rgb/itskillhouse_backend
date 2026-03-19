@@ -28,8 +28,6 @@ const uploadMiddleware = (req, res, next) => {
       });
     }
 
-    console.log("✅ File received:", req.file); // debug
-
     next();
   });
 };

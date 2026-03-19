@@ -7,22 +7,53 @@ import {
   deletePortfolio,
 } from "../controllers/portfolioController.js";
 import { isAdminAuthenticated } from "../middleware/authMiddleware.js";
+import { createUpload } from "../config/cloudinary.js";
 
 const router = express.Router();
 
-// Public: GET all portfolios
-router.get("/", getPortfolios);
+// ----------------- Cloudinary Upload -----------------
+const portfolioUpload = createUpload("portfolios");
 
-// Public: GET single portfolio by ID
+// 🔥 Multer + Cloudinary error handler wrapper
+const uploadMiddleware = (req, res, next) => {
+  const upload = portfolioUpload.single("image");
+
+  upload(req, res, function (err) {
+    if (err) {
+      console.error("❌ Upload Error:", err);
+
+      return res.status(500).json({
+        success: false,
+        message: "Image upload failed",
+        error: err.message,
+      });
+    }
+
+    next();
+  });
+};
+
+// ----------------- ROUTES -----------------
+
+// Public
+router.get("/", getPortfolios);
 router.get("/:id", getPortfolioById);
 
-// Protected/Admin: CREATE a portfolio
-router.post("/", isAdminAuthenticated, createPortfolio);
+// Admin
+router.post(
+  "/create",
+  isAdminAuthenticated,
+  uploadMiddleware, // ✅ same as testimonials
+  createPortfolio
+);
 
-// Protected/Admin: UPDATE a portfolio
-router.put("/:id", isAdminAuthenticated, updatePortfolio);
+router.put(
+  "/:id",
+  isAdminAuthenticated,
+  uploadMiddleware,
+  updatePortfolio
+);
 
-// Protected/Admin: DELETE a portfolio
 router.delete("/:id", isAdminAuthenticated, deletePortfolio);
 
 export default router;

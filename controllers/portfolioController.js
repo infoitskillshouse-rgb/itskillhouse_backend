@@ -68,14 +68,24 @@ export const getPortfolioById = async (req, res) => {
  */
 export const createPortfolio = async (req, res) => {
   try {
-    if (!req.body || Object.keys(req.body).length === 0) {
+    const { title, category, description, projectLink, technologies } = req.body;
+
+    // Required validation
+    if (!title || !category || !req.file) {
       return res.status(400).json({
         success: false,
-        message: "Portfolio data is required",
+        message: "Title, category and image are required",
       });
     }
 
-    const portfolio = await Portfolio.create(req.body);
+    const portfolio = await Portfolio.create({
+      title,
+      category,
+      description,
+      projectLink,
+      technologies: technologies ? JSON.parse(technologies) : [],
+      image: req.file.path, // ✅ Cloudinary URL
+    });
 
     return res.status(201).json({
       success: true,
@@ -108,17 +118,22 @@ export const updatePortfolio = async (req, res) => {
       });
     }
 
-    if (!req.body || Object.keys(req.body).length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Update data is required",
-      });
+    let updateData = { ...req.body };
+
+    // Agar new image upload hui hai
+    if (req.file) {
+      updateData.image = req.file.path; // ✅ new Cloudinary image
+    }
+
+    // technologies parse
+    if (updateData.technologies) {
+      updateData.technologies = JSON.parse(updateData.technologies);
     }
 
     const updatedPortfolio = await Portfolio.findByIdAndUpdate(
       id,
-      req.body,
-      { returnDocument: "after", runValidators: true }
+      updateData,
+      { new: true, runValidators: true }
     );
 
     if (!updatedPortfolio) {

@@ -1,12 +1,12 @@
 import Student from "../models/studentModel.js";
 
 /* =========================
-   Course Codes Mapping
+   Course Codes Mapping (FIXED)
 ========================= */
 const courseCodes = {
   "Full Stack Development": "FSD",
   "Basic Computer": "BC",
-  "Basic Computer  & Typing ": "BCT",
+  "Basic Computer & Typing": "BCT",
   "Website Development": "WD",
   "Website Designing": "WDS",
   "WordPress": "WP",
@@ -16,9 +16,10 @@ const courseCodes = {
   "Php": "PHP",
   "Tally": "TALLY",
   "Tally (GST + Return)": "TGR",
-  "Tally Prime": "TPO",
+  "Tally Prime": "TP",
   "Punjabi Typing": "PT",
   "Hindi Typing": "HT",
+  "Javascript": "JS"
 };
 
 /* =========================
@@ -26,7 +27,9 @@ const courseCodes = {
 ========================= */
 const generateStudentId = async (courseName) => {
   const year = new Date().getFullYear();
-  const code = courseCodes[courseName] || "GEN";
+
+  const cleanCourse = courseName.trim();
+  const code = courseCodes[cleanCourse] || "GEN";
 
   const last = await Student.findOne({
     studentId: new RegExp(`^${year}-${code}-`)
@@ -50,6 +53,7 @@ export const createStudent = async (req, res, next) => {
       motherName,
       courseName,
       courseDuration,
+      durationType,
       totalMarks,
       obtainedMarks,
       dateOfAdmission,
@@ -64,7 +68,8 @@ export const createStudent = async (req, res, next) => {
       !fatherName ||
       !motherName ||
       !courseName ||
-      !courseDuration
+      !courseDuration ||
+      !durationType
     ) {
       return res.status(400).json({ message: "All fields are required" });
     }
@@ -84,7 +89,8 @@ export const createStudent = async (req, res, next) => {
       return res.status(400).json({ message: "Invalid academic data" });
     }
 
-    const percentage = ((obtained / total) * 100).toFixed(2);
+    // ✅ FIXED NUMBER
+    const percentage = Number(((obtained / total) * 100).toFixed(2));
 
     let grade = "F";
     if (percentage >= 90) grade = "A+";
@@ -98,7 +104,7 @@ export const createStudent = async (req, res, next) => {
     const exists = await Student.findOne({
       name: name.trim(),
       fatherName: fatherName.trim(),
-      courseName,
+      courseName: courseName.trim(),
       dateOfAdmission: admissionDate,
       isDeleted: false,
     });
@@ -109,23 +115,23 @@ export const createStudent = async (req, res, next) => {
 
     const studentId = await generateStudentId(courseName);
 
-    // Cloudinary image URL
-    const imageUrl = req.file.path;
+    // ✅ Combine duration
+    const finalDuration = `${courseDuration} ${durationType}`;
 
     const student = await Student.create({
       studentId,
       name: name.trim(),
       fatherName: fatherName.trim(),
       motherName: motherName.trim(),
-      courseName,
-      courseDuration,
+      courseName: courseName.trim(),
+      courseDuration: finalDuration,
       totalMarks: total,
       obtainedMarks: obtained,
       percentage,
       grade,
       result,
       dateOfAdmission: admissionDate,
-      image: imageUrl,
+      image: req.file.path,
     });
 
     res.status(201).json({
@@ -158,7 +164,7 @@ export const getStudentByStudentId = async (req, res, next) => {
 };
 
 /* =========================
-   UPDATE STUDENT
+   UPDATE STUDENT (FULL FIX)
 ========================= */
 export const updateStudent = async (req, res, next) => {
   try {
@@ -191,6 +197,28 @@ export const updateStudent = async (req, res, next) => {
         student[field] = req.body[field];
       }
     });
+
+    // ✅ AUTO RECALCULATE
+    if (req.body.totalMarks || req.body.obtainedMarks) {
+      const total = Number(student.totalMarks);
+      const obtained = Number(student.obtainedMarks);
+
+      if (total > 0) {
+        const percentage = Number(((obtained / total) * 100).toFixed(2));
+
+        student.percentage = percentage;
+
+        let grade = "F";
+        if (percentage >= 90) grade = "A+";
+        else if (percentage >= 80) grade = "A";
+        else if (percentage >= 70) grade = "B";
+        else if (percentage >= 60) grade = "C";
+        else if (percentage >= 50) grade = "D";
+
+        student.grade = grade;
+        student.result = percentage >= 40 ? "pass" : "fail";
+      }
+    }
 
     await student.save();
 
