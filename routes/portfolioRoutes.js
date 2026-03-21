@@ -42,8 +42,8 @@ router.get("/:id", getPortfolioById);
 // Admin
 router.post(
   "/create",
-  isAdminAuthenticated,
-  uploadMiddleware, // ✅ same as testimonials
+  uploadMiddleware,
+  isAdminAuthenticated,// ✅ same as testimonials
   createPortfolio
 );
 

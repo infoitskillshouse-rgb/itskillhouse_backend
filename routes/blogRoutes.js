@@ -1,4 +1,3 @@
-// routes/blogRoutes.js
 import express from "express";
 import {
   createBlog,
@@ -9,21 +8,42 @@ import {
   getBlogById,
 } from "../controllers/blogController.js";
 import { isAdminAuthenticated } from "../middleware/authMiddleware.js";
-import { createUpload } from "../config/cloudinary.js";  // Cloudinary setup
+import { createUpload } from "../config/cloudinary.js";
 
 const router = express.Router();
 
-// Cloudinary upload for blogs
-const uploadBlog = createUpload("blogs"); // Cloudinary folder: "blogs"
+// Cloudinary upload
+const blogUpload = createUpload("blogs");
+
+// ✅ SAME wrapper like portfolio
+const uploadMiddleware = (req, res, next) => {
+  const upload = blogUpload.single("image");
+
+  upload(req, res, function (err) {
+    if (err) {
+      console.error("❌ Blog Upload Error:", err);
+
+      return res.status(500).json({
+        success: false,
+        message: "Image upload failed",
+        error: err.message,
+      });
+    }
+
+    next();
+  });
+};
 
 // ----------------- Public Routes -----------------
-router.get("/", getAllBlogs);           // Get all blogs with pagination
-router.get("/id/:id", getBlogById);     // Get blog by MongoDB ID
-router.get("/:slug", getBlogBySlug);    // Get blog by slug
+router.get("/", getAllBlogs);
+router.get("/id/:id", getBlogById);
+router.get("/:slug", getBlogBySlug);
 
-// ----------------- Protected Routes (Admin) -----------------
-router.post("/create", isAdminAuthenticated, uploadBlog.single("image"), createBlog);
-router.put("/:id", isAdminAuthenticated, uploadBlog.single("image"), updateBlog);
+// ----------------- Protected Routes -----------------
+router.post("/create", isAdminAuthenticated, uploadMiddleware, createBlog);
+
+router.put("/:id", isAdminAuthenticated, uploadMiddleware, updateBlog);
+
 router.delete("/:id", isAdminAuthenticated, deleteBlog);
 
 export default router;

@@ -69,6 +69,7 @@ export const getPortfolioById = async (req, res) => {
 export const createPortfolio = async (req, res) => {
   try {
     const { title, category, description, projectLink, technologies } = req.body;
+    console.log(req.body)
 
     // Required validation
     if (!title || !category || !req.file) {
